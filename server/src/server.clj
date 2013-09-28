@@ -3,11 +3,6 @@
   (:use [org.httpkit.server :only [run-server]])
   (:require [routes]))
 
-(defn app [request]
-  {:status 200
-   :headers {"Content-Type" "text/plain"}
-   :body "Hello World"})
-
 (defonce server (atom nil))
 
 (defn start-server []
