@@ -8,4 +8,6 @@
                  [compojure "1.1.5"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
                    :source-paths ["dev"]}}
-  :main server)
+  :uberjar-name "server-standalone.jar"
+  :main server
+  :aot [server])

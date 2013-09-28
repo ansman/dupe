@@ -1,4 +1,5 @@
 (ns server
+  (:gen-class)
   (:use [org.httpkit.server :only [run-server]])
   (:require [routes]))
 
