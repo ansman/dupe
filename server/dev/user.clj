@@ -11,6 +11,7 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.tools.namespace.repl :refer (refresh refresh-all)]
+   [model]
    [server]))
 
 (def system
@@ -22,21 +23,18 @@
   "Creates and initializes the system under development in the Var
   #'system."
   []
-  ;; TODO
-  )
+  (model/init))
 
 (defn start
   "Starts the system running, updates the Var #'system."
   []
-  ;; TODO
-  )
+  (server/start))
 
 (defn stop
   "Stops the system if it is currently running, updates the Var
   #'system."
   []
-  ;; TODO
-  )
+  (server/stop))
 
 (defn go
   "Initializes and starts the system running."

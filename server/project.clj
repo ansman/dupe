@@ -12,5 +12,5 @@
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
                    :source-paths ["dev"]}}
   :uberjar-name "server-standalone.jar"
-  :main server
-  :aot [server])
+  :main main
+  :aot [main])

@@ -5,13 +5,11 @@
 
 (defonce server (atom nil))
 
-(defn start-server []
+(defn start []
   (reset! server
           (run-server
             (routes/app) {:port 8080
                           :thread 4})))
 
-(defn -main
-  [& args]
-  (start-server)
-  (println "up!"))
+(defn stop []
+  (@server))

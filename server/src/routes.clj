@@ -19,8 +19,11 @@
   (model/update-report (-extract-body req))
   "ok")
 
-(defn put-task [])
-(defn post-task-comments[])
+(defn put-task [id req]
+  (model/update-report id (get (-extract-body req) "done")))
+
+(defn post-task-comments [id req]
+  (model/add-task-comment id (get (-extract-body req) "comment")))
 
 (defn show-options [req]
   {:status 200
@@ -40,8 +43,8 @@
   (GET "/api/latest" [] get-latest)
   (POST "/api/planned" [] post-planned)
   (POST "/api/unplanned" [] post-unplanned)
-  (PUT "/api/task/:id/" [] put-task)
-  (POST "/api/task/:id/comments" [] post-task-comments)
+  (PUT "/api/tasks/:id/" [id] #(put-task (Integer. id) %))
+  (POST "/api/tasks/:id/comments" [id] #(post-task-comments (Integer. id) %))
   (route/files "/static/")
   (route/not-found "<p>Page not found.</p>"))
 
