@@ -9,7 +9,9 @@
                  [compojure "1.1.5"]
                  [me.shenfeng/mustache "1.1"]
                  [org.clojure/data.json "0.2.3"]
-                 [midje "1.5.1"]]
+                 [midje "1.5.1"]
+                 [log4j/log4j "1.2.17"]
+                 [ring.middleware.logger "0.4.0"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
                    :source-paths ["dev"]}}
   :uberjar-name "server-standalone.jar"

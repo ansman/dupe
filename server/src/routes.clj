@@ -3,6 +3,7 @@
         [compojure.core :only [defroutes GET POST PUT DELETE ANY OPTIONS context]])
   (:require [compojure.route :as route]
             [clojure.data.json :as json]
+            [ring.middleware.logger :as logger]
             [model]))
 
 (defn -extract-body [req]
@@ -49,4 +50,7 @@
   (route/not-found "<p>Page not found.</p>"))
 
 (defn app []
-  (site (wrap-response #'all-routes)))
+  (-> #'all-routes
+    wrap-response
+    logger/wrap-with-plaintext-logger
+    site))
