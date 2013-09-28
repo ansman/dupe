@@ -11,7 +11,7 @@
 (defn next-id []
   (swap! counter inc))
 
-(defn -new-task [planned?]
+(defn new-task [planned?]
   {:id (next-id)
    :done false
    :comments []
@@ -22,7 +22,7 @@
 
 (defn -new-task-and-update [planned?]
   (fn [changes]
-    (merge (-new-task planned?) changes)))
+    (merge (new-task planned?) changes)))
 
 (defn -clean-task [task]
   (dissoc task :planned))

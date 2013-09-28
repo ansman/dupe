@@ -8,7 +8,8 @@
                  [http-kit "2.1.10"]
                  [compojure "1.1.5"]
                  [me.shenfeng/mustache "1.1"]
-                 [org.clojure/data.json "0.2.3"]]
+                 [org.clojure/data.json "0.2.3"]
+                 [midje "1.5.1"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
                    :source-paths ["dev"]}}
   :uberjar-name "server-standalone.jar"
