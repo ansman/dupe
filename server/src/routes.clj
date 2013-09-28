@@ -46,4 +46,4 @@
   (route/not-found "<p>Page not found.</p>"))
 
 (defn app []
-  (site #'all-routes))
+  (site (wrap-response #'all-routes)))
