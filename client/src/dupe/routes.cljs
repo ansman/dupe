@@ -14,6 +14,7 @@
   (layout-with-view application/show view))
 
 (defroute [] (application-layout-with-view auth/show))
+(defroute ["logout"] (application-layout-with-view auth/log-out))
 (defroute ["auth" :token] auth/handle-auth-token)
 (defroute ["followup"] (application-layout-with-view followup/show))
 (defroute ["plan"] (application-layout-with-view plan/show))

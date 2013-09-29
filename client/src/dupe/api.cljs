@@ -40,3 +40,8 @@
                    :content (json/serialize (clj->js data))
                    :on-success (partial handle-success on-success)
                    :on-error (partial handle-error on-error)))
+
+(defn ^:export delete [endpoint & {:keys [on-error on-success]}]
+  (request/request [:delete (build-url endpoint)]
+                   :on-success (partial handle-success on-success)
+                   :on-error (partial handle-error on-error)))

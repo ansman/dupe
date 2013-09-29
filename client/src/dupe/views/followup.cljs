@@ -89,8 +89,9 @@
 
 (defn read-new-task [new-task-form]
   (let [input (sel1 new-task-form "input[type=text]")]
-    (when-let [task (trim (dommy/value input))]
-      {:id nil :description task})))
+    (let [task (trim (dommy/value input))]
+      (when (not (empty? task))
+        {:id nil :description task}))))
 
 (defn new-unplanned-task [ev]
   (.preventDefault ev)
@@ -107,7 +108,6 @@
   (let [task (dommy/closest (.-target ev) :.task)]
     (let [new-comment (sel1 task :.new-comment)]
       (dommy/toggle-class! new-comment "show"))))
-
 
 (defn create-root []
   (let [root (node [:#followup])]

@@ -8,6 +8,9 @@
 (defn ^:export set-access-token! [new-token]
   (.setItem js/localStorage access-token-key new-token))
 
+(defn ^:export remove-access-token! []
+  (.removeItem js/localStorage access-token-key))
+
 (defn ^:export refresh-access-token! []
   (when-let [token (access-token)] (set-access-token! token)))
 
