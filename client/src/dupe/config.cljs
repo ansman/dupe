@@ -1,3 +1,3 @@
 (ns dupe.config)
 
-(def config {:api-url "http://192.241.196.82/api"})
+(def config {:api-url "http://dupe.clojurecup.com/api"})

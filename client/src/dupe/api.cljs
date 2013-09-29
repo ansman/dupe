@@ -10,10 +10,11 @@
   (when clbk
     (clbk (keywordize-keys (js->clj (json/parse (:body data)))))))
 
-(defn handle-error [clbk & {:keys [status body]}]
+(defn handle-error [clbk & {:keys [body status]}]
   (if clbk
     (clbk status body)
-    (js/alert (str "The server failed with status " (or status "unknown")))))
+    (.warn js/console
+           (str "The server failed with status " (or status "unknown")))))
 
 (defn build-url [endpoint] (str (:api-url config) endpoint))
 

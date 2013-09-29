@@ -23,11 +23,11 @@
   (dommy/replace-contents! root (render)))
 
 (defn add-task-inputs-if-needed [root]
-  (when-not (empty? (.-value (last (sel root [:.task :input]))))
+  (when-not (empty? (dommy/value (last (sel root [:.task :input]))))
     (dommy/insert-before! (task-input "") (sel1 root :.form-actions))))
 
 (defn empty-task-input? [form-group]
-  (empty? (.-value (sel1 form-group :input))))
+  (empty? (dommy/value (sel1 form-group :input))))
 
 (defn task-inputs-to-remove [root]
   (filter empty-task-input? (nthnext (butlast (sel root :.task)) 3)))
@@ -48,7 +48,7 @@
   (map (fn [description] {:id nil :description description})
     (filter (complement empty?)
       (map trim
-        (map #(.-value %) (sel root [:.task :input]))))))
+        (map dommy/value (sel root [:.task :input]))))))
 
 (defn submit-button [root]
   (sel1 root "input[type=submit]"))
