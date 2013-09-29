@@ -16,11 +16,5 @@
         :notify-command ["growlnotify" "-m"]
         :compiler {
           :pretty-print true
-          :output-to "public/javascript/app.js"}}
-      :production {
-        :source-paths ["src"]; "test"]
-        :compiler {
-          :optimizations :advanced
-          :pretty-print false
           :output-to "public/javascript/app.js"}}}
     :test-commands {"tests" ["phantomjs" :cljs.testrunner "public/javascript/app.js"]}})
