@@ -55,7 +55,7 @@
   (j/query db-spec ["select * from tasks join tasks_in_reports on tasks.id = task_id where report_id = ?" report-id]))
 
 (defn update-task [id done?]
-  (j/update! db-spec :task {:id done?} ["id=?" id]))
+  (j/update! db-spec :tasks {:id done?} ["id=?" id]))
 
 (defn add-comment [task-id comment]
   (j/insert! db-spec :comments {:task_id task-id :comment comment}))
