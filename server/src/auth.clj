@@ -35,3 +35,10 @@
     (db/insert-or-update-user
       (assoc (select-keys github-user github-fields) "access_token" token))
     token))
+
+(defn is-valid-access-token [access-token]
+  (let [res
+    (and
+      access-token
+      (db/get-user-by-access-token access-token))]
+    res))

@@ -83,7 +83,6 @@
     avatar_url = values(avatar_url)")
 
 (defn insert-or-update-user [user]
-  (println user)
   (j/execute! db-spec [insert-q
                        (get user "id")
                        (get user "access_token")
@@ -91,3 +90,7 @@
                        (get user "name")
                        (get user "email")
                        (get user "avatar_url")]))
+
+(defn get-user-by-access-token [access-token]
+  (first
+    (j/query db-spec ["select * from users where access_token = ?" access-token])))
