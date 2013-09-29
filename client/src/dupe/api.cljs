@@ -29,14 +29,14 @@
 
 (defn ^:export post [endpoint & {:keys [data on-error on-success]}]
   (request/request [:post (build-url endpoint)]
-                   :headers {:content-type "application/json"}
+                   :headers {"Content-Type" "application/json"}
                    :content (json/serialize (clj->js data))
                    :on-success (partial handle-success on-success)
                    :on-error (partial handle-error on-error)))
 
 (defn ^:export put [endpoint & {:keys [data on-error on-success]}]
   (request/request [:put (build-url endpoint)]
-                   :headers {:content-type "application/json"}
+                   :headers {"Content-Type" "application/json"}
                    :content (json/serialize (clj->js data))
                    :on-success (partial handle-success on-success)
                    :on-error (partial handle-error on-error)))
