@@ -72,10 +72,11 @@
 
 (def insert-q
   "insert into users
-    (id, access_token, login, name, email, avatar_url)
+    (id, github_access_token, access_token, login, name, email, avatar_url)
   values
-    (?, ?, ?, ?, ?, ?)
+    (?, ?, ?, ?, ?, ?, ?)
   on duplicate key update
+    github_access_token = values(github_access_token),
     access_token = values(access_token),
     login = values(login),
     name = values(name),
@@ -85,6 +86,7 @@
 (defn insert-or-update-user [user]
   (j/execute! db-spec [insert-q
                        (get user "id")
+                       (get user "github_access_token")
                        (get user "access_token")
                        (get user "login")
                        (get user "name")

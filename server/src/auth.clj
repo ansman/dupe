@@ -1,6 +1,7 @@
 (ns auth
   (:require [org.httpkit.client :as http]
             [clojure.data.json :as json]
+            [clojure.string]
             [db]))
 
 (def client-id "719f4d75d0d8adb52095")
@@ -18,6 +19,10 @@
     (println "Exchange token; github says:" resp)
     (-> resp :body json/read-str (get "access_token"))))
 
+(defn uuid []
+  (clojure.string/replace (str (java.util.UUID/randomUUID)) "-" ""))
+
+
 (defn -fetch-github-user [github-access-token]
   (let [resp @(http/get
                 (str "https://api.github.com/user?access_token="
@@ -29,12 +34,17 @@
 
 (def github-fields ["id" "login" "name" "email" "avatar_url"])
 
-(defn callback [code]
-  (let [token (-exchange-token code)
-        github-user (-fetch-github-user token)]
+(defn -fetch-and-store-user [github-access-token]
+  (let [github-user (-fetch-github-user github-access-token)
+        access-token (uuid)]
     (db/insert-or-update-user
-      (assoc (select-keys github-user github-fields) "access_token" token))
-    token))
+      (assoc (select-keys github-user github-fields)
+             "github_access_token" github-access-token
+             "access_token" access-token))
+    access-token))
+
+(defn callback [code]
+  (-> code -exchange-token -fetch-and-store-user))
 
 (defn is-valid-access-token [access-token]
   (let [res
