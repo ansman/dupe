@@ -14,11 +14,11 @@
 
 (defn post-planned [req]
   (model/new-report (-extract-body req))
-  "ok")
+  (json/write-str "ok"))
 
 (defn post-unplanned [req]
   (model/update-report (-extract-body req))
-  "ok")
+  (json/write-str "ok"))
 
 (defn put-task [id req]
   (model/update-report id (get (-extract-body req) "done")))
@@ -29,14 +29,16 @@
 (defn show-options [req]
   {:status 200
    :headers {"Access-Control-Allow-Methods" "POST, GET, PUT, OPTIONS, DELETE"
-             "Access-Control-Allow-Origin" "*"}})
+             "Access-Control-Allow-Origin" "*"
+             "Access-Control-Allow-Headers" "Content-Type"}})
 
 
 (defn wrap-response [app]
   (fn [request]
     (update-in (merge {:status 200} (app request))
                [:headers] merge {"Content-Type" "application/json; charset=utf-8"
-                                 "Access-Control-Allow-Origin" "*"})))
+                                 "Access-Control-Allow-Origin" "*"
+                                 "Access-Control-Allow-Headers" "Content-Type"})))
 
 
 (defroutes all-routes
