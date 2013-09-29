@@ -9,13 +9,15 @@
   (db/finalize-previous-report)
   (let [report-id (db/create-new-report)
         task-ids (db/get-ids-for-tasks planned)]
-    (db/insert-report-task-mappings report-id task-ids true)
+    (doall
+      (db/insert-report-task-mappings report-id task-ids true))
   ))
 
 (defn update-report [unplanned]
   (let [report-id (:id (db/get-latest-report))
         task-ids (db/get-ids-for-tasks unplanned)]
-    (db/insert-report-task-mappings report-id task-ids false)
+    (doall
+      (db/insert-report-task-mappings report-id task-ids false))
   ))
 
 (defn update-task [id done?]
@@ -36,7 +38,6 @@
   (select-keys comment [:id :comment]))
 
 (defn get-comment-lookup-for-tasks [tasks]
-  (println tasks)
   (let [task-ids (distinct (map :id tasks))]
     (group-by :task_id (db/get-comments-for-tasks task-ids))
   ))
