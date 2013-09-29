@@ -61,7 +61,8 @@
           (get "access_token")
           auth/is-valid-access-token
           nil?)
-      {:status 200 :body (json/write-str {"redirect_url" auth-redirect-url})}
+      {:status 401
+       :body (json/write-str {"redirect_url" auth-redirect-url})}
       (app request))
   ))
 
