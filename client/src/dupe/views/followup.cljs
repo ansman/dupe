@@ -23,37 +23,39 @@
 (defn end-request [root]
   (disable-next-button root (swap! active-request dec)))
 
-(deftemplate render-planned-task [task]
-  [:.form-group.planned.task {:data-id (:id task)}
-   [:label.checkbox-label
-    [:input {:type "checkbox" :checked (:done task)}]
-    [:span.text (:description task)]]])
-
-(deftemplate render-unplanned-task [task]
-  [:.form-group.unplanned.task {:data-id (:id task)}
-   [:label.checkbox-label
-    [:input {:type "checkbox" :checked (:done task)}]
-    [:span.text (:description task)]]])
+(deftemplate render-task [task]
+  [:.task {:data-id (:id task)}
+   [:.form-group
+    [:label.checkbox-label
+     [:input {:type "checkbox" :checked (:done task)}]
+     [:span.text (:description task)]]
+    [:i.toggle-add-comment.glyphicon.glyphicon-comment {:title "Add a comment"}]]
+   [:.row.new-comment
+    [:.form-group.col-md-8
+     [:.input-group
+      [:input.form-control.input-sm {:type "text" :placeholder "Add a comment"}]
+      [:span.input-group-btn
+       [:input.btn.btn-default.btn-sm {:type "submit" :value "Add"}]]]]]])
 
 (deftemplate render [planned unplanned]
   [:.page-header
-    [:h2 "Todays tasks"]]
+    [:h2 "Today"]]
   [:.row
    [:.col-md-6.col-sm-12
     [:h2 "Planned tasks"]
     [:#planned-tasks
-     (map render-planned-task planned)]]
+     (map render-task planned)]]
    [:.col-md-6.col-sm-12
     [:h2 "Unplanned tasks"]
     [:#unplanned-tasks
-     (map render-unplanned-task unplanned)]
+     (map render-task unplanned)]
     [:form#new-unplanned-task
      [:.input-group
       [:input.form-control {:type "text"}]
       [:span.input-group-btn
        [:input.btn.btn-default {:type "submit" :value "Add"}]]]]]]
-  [:button.btn.btn-lg.btn-primary.next "Plan next day"])
-
+  [:.form-actions
+    [:button.btn.btn-lg.btn-primary.next "Plan next day"]])
 
 (defn followup-fetched [root {:keys [planned unplanned]}]
   (if (empty? planned)
@@ -82,7 +84,7 @@
   (set-unplanned-task-form-state (sel1 root :#new-unplanned-task) false)
   (setup-new-unplanned-task (sel1 root :#new-unplanned-task))
   (dommy/append! (sel1 root :#unplanned-tasks)
-                 (map render-unplanned-task tasks))
+                 (map render-task tasks))
   (end-request root))
 
 (defn read-new-task [new-task-form]
@@ -101,11 +103,18 @@
                   :on-success (partial task-added root))
         (start-request root)))))
 
+(defn toggle-new-comment [ev]
+  (let [task (dommy/closest (.-target ev) :.task)]
+    (let [new-comment (sel1 task :.new-comment)]
+      (dommy/toggle-class! new-comment "show"))))
+
+
 (defn create-root []
   (let [root (node [:#followup])]
-    (dommy/listen! [root [:.task]] :change toggle-task-input)
+    (dommy/listen! [root :.task] :change toggle-task-input)
     (dommy/listen! [root :#new-unplanned-task] :submit new-unplanned-task)
     (dommy/listen! [root :button.next] :click next-page)
+    (dommy/listen! [root [:.task :.toggle-add-comment]] :click toggle-new-comment)
     root))
 
 (defn ^:export show []

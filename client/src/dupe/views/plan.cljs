@@ -7,7 +7,7 @@
 
 (deftemplate task-input [placeholder]
   [:.form-group.task
-   [:input.input-lg.form-control {:type "text" :placeholder placeholder :value placeholder}]])
+   [:input.input-lg.form-control {:type "text" :placeholder placeholder}]])
 
 (deftemplate render []
   [:.page-header
