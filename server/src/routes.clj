@@ -57,7 +57,7 @@
 (defn require-auth [app]
   (fn [request]
     (if (-> request :query-params (get "access_token") nil?)
-      (redirect auth-redirect-url)
+      {:status 200 :body (json/write-str {"redirect_url" auth-redirect-url})}
       (app request))
   ))
 
@@ -75,7 +75,7 @@
 
 (defn app []
   (-> #'all-routes
-    require-auth
     wrap-response
+    require-auth
     logger/wrap-with-plaintext-logger
     site))
