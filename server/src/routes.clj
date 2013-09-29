@@ -84,6 +84,10 @@
               [:id :login :name :email :avatar_url])]
     (json/write-str res)))
 
+(defn delete-access-token [request token]
+  (db/delete-access-token token)
+  (json/write-str "ok"))
+
 (defroutes all-routes
   (OPTIONS "*" [] show-options)
   (GET "/api/latest" [] get-latest)
@@ -94,6 +98,7 @@
   (POST "/api/tasks/:id/comments" [id] #(post-task-comments (Integer. id) %))
   (GET "/api/auth/redirect" [] redirect-to-auth)
   (GET "/api/auth/callback/:redirect" [redirect] #(handle-auth-callback % redirect))
+  (DELETE "/api/access-tokens/:token" [token] #(delete-access-token % token))
   (route/files "/static/")
   (route/not-found "<p>Page not found.</p>"))
 

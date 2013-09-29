@@ -96,3 +96,6 @@
 (defn get-user-by-access-token [access-token]
   (first
     (j/query db-spec ["select * from users where access_token = ?" access-token])))
+
+(defn delete-access-token [access-token]
+  (j/update! db-spec :users {:access_token nil} ["access_token = ?" access-token]))
