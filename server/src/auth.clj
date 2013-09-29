@@ -1,13 +1,34 @@
 (ns auth
   (:require [org.httpkit.client :as http]
+            [ring.util.codec :as codec]
             [clojure.data.json :as json]
             [clojure.string]
+            [clojure.data.codec.base64 :as b64]
             [db]))
 
 (def client-id "719f4d75d0d8adb52095")
 (def client-secret "f3ee5554f8e829f888ed599ae5d998acfbd9b4d9")
 (def oauth-url "https://github.com/login/oauth/authorize")
-(def auth-request-url (str oauth-url "?client_id=" client-id))
+
+
+(defn encode-b64 [string]
+  (-> string .getBytes b64/encode String.))
+
+(defn decode-b64 [string]
+  (-> string .getBytes b64/decode String.))
+
+
+(defn -create-callback-url [redirect-url]
+  (codec/url-encode
+    (str "http://dupe.clojurecup.com/api/auth/callback/" (encode-b64 redirect-url))))
+
+
+(defn auth-request-url [redirect-url]
+  (format "%s?redirect_uri=%s&client_id=%s"
+          oauth-url
+          (-create-callback-url redirect-url)
+          client-id))
+
 
 (defn -exchange-token [code]
   (let [resp @(http/post "https://github.com/login/oauth/access_token"

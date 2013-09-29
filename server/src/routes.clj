@@ -39,11 +39,11 @@
   (model/add-task-comment id (get (-extract-body req) "comment")))
 
 (defn redirect-to-auth [req]
-  (redirect auth/auth-request-url))
+  (-> req :query-params (get "redirect_url") auth/auth-request-url redirect))
 
-(defn handle-auth-callback [req]
+(defn handle-auth-callback [req encoded-redirect-url]
   (let [token (-> req :query-params (get "code") auth/callback)]
-    (redirect (str "/?access_token=" token))))
+    (redirect (format "%s/%s" (auth/decode-b64 encoded-redirect-url) token))))
 
 
 (defn show-options [req]
@@ -66,11 +66,8 @@
     (get "access_token")
     auth/is-valid-access-token))
 
-(def non-authed-routes #{"/api/auth/redirect"
-                         "/api/auth/callback"})
-
 (defn authed-route? [request]
-  (not (contains? non-authed-routes (path-info request))))
+  (nil? (re-matches #"^/api/auth.*" (path-info request))))
 
 (defn require-auth [app]
   (fn [request]
@@ -96,7 +93,7 @@
   (PUT "/api/tasks/:id" [id] #(put-task (Integer. id) %))
   (POST "/api/tasks/:id/comments" [id] #(post-task-comments (Integer. id) %))
   (GET "/api/auth/redirect" [] redirect-to-auth)
-  (GET "/api/auth/callback" [] handle-auth-callback)
+  (GET "/api/auth/callback/:redirect" [redirect] #(handle-auth-callback % redirect))
   (route/files "/static/")
   (route/not-found "<p>Page not found.</p>"))
 
