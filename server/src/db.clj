@@ -61,7 +61,7 @@
   (j/query db-spec [(str "select * from tasks where id in " (-make-in-str task-ids))]))
 
 (defn update-task [id done?]
-  (j/update! db-spec :tasks {:id done?} ["id=?" id]))
+  (j/update! db-spec :tasks {:done done?} ["id=?" id]))
 
 (defn add-comment [task-id comment]
   (j/insert! db-spec :comments {:task_id task-id :comment comment}))
