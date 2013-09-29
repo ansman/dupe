@@ -8,12 +8,11 @@ mkdir -p build/javascript build/css
 
 function hash_file {
   file="$1"
-  hashsum=`md5 -q "build/$file"`
+  hashsum=`shasum "build/$file" | awk '{print $1;}'`
   extension="${file##*.}"
   name="${file%.*}"
   new_name="$name-$hashsum.$extension"
   mv "build/$file" "build/$new_name"
-
   sed "s#$file#$new_name#" "build/index.html" > build/index.html.tmp
   mv build/index.html.tmp build/index.html
 }
