@@ -29,4 +29,13 @@ create table tasks_in_reports (
     primary key (report_id, task_id)
 );
 
+create table users (
+    id int primary key,
+    access_token varchar(256),
+    login varchar(32),
+    name varchar(64),
+    email varchar(32),
+    avatar_url varchar(256)
+);
+
 create index comments_task_idx on comments (task_id);

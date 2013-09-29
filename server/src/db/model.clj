@@ -10,7 +10,7 @@
    :password "dupe"})
 
 
-(def tables '(:users :comments :reports :tasks :tasks_in_reports))
+(def tables '(:comments :reports :tasks :tasks_in_reports))
 
 (defn -make-in-str [ids]
   (str "(" (clojure.string/join "," ids) ")"))
@@ -69,25 +69,3 @@
 (defn get-comments-for-tasks [task-ids]
   (println task-ids)
   (j/query db-spec [(str "select * from comments where task_id in " (-make-in-str task-ids))]))
-
-(def insert-q
-  "insert into users
-    (id, access_token, login, name, email, avatar_url)
-  values
-    (?, ?, ?, ?, ?, ?)
-  on duplicate key update
-    access_token = values(access_token),
-    login = values(login),
-    name = values(name),
-    email = values(email),
-    avatar_url = values(avatar_url)")
-
-(defn insert-or-update-user [user]
-  (println user)
-  (j/execute! db-spec [insert-q
-                       (get user "id")
-                       (get user "access_token")
-                       (get user "login")
-                       (get user "name")
-                       (get user "email")
-                       (get user "avatar_url")]))

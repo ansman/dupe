@@ -1,10 +1,12 @@
 (ns routes
-  (:use [compojure.handler :only [site]]
+  (:use [ring.util.response :only [redirect]]
+        [compojure.handler :only [site]]
         [compojure.core :only [defroutes GET POST PUT DELETE ANY OPTIONS context]])
   (:require [compojure.route :as route]
             [clojure.data.json :as json]
             [ring.middleware.logger :as logger]
-            [model]))
+            [model]
+            [auth]))
 
 (defn -extract-body [req]
   (-> req :body clojure.java.io/reader json/read))
@@ -28,6 +30,14 @@
 (defn post-task-comments [id req]
   (model/add-task-comment id (get (-extract-body req) "comment")))
 
+(defn redirect-to-auth [req]
+  (redirect auth/auth-request-url))
+
+(defn handle-auth-callback [req]
+  (let [token (-> req :query-params (get "code") auth/callback)]
+    (redirect (str "/?access_token=" token))))
+
+
 (defn show-options [req]
   {:status 200
    :headers {"Access-Control-Allow-Methods" "POST, GET, PUT, OPTIONS, DELETE"
@@ -42,7 +52,6 @@
                                  "Access-Control-Allow-Origin" "*"
                                  "Access-Control-Allow-Headers" "Content-Type"})))
 
-
 (defroutes all-routes
   (OPTIONS "*" [] show-options)
   (GET "/api/latest" [] get-latest)
@@ -50,6 +59,8 @@
   (POST "/api/unplanned" [] post-unplanned)
   (PUT "/api/tasks/:id" [id] #(put-task (Integer. id) %))
   (POST "/api/tasks/:id/comments" [id] #(post-task-comments (Integer. id) %))
+  (GET "/api/auth/redirect" [] redirect-to-auth)
+  (GET "/api/auth/callback" [] handle-auth-callback)
   (route/files "/static/")
   (route/not-found "<p>Page not found.</p>"))
 
