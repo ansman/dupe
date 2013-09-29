@@ -13,18 +13,23 @@
 (defn -extract-body [req]
   (-> req :body clojure.java.io/reader json/read))
 
+(defn -user-id [req]
+  (-> req :user :id))
+
 (defn get-latest [req]
-  (json/write-str (model/get-latest-report)))
+  (-> req -user-id model/get-latest-report json/write-str))
 
 (defn post-planned [req]
-  (model/new-report (-extract-body req))
-  (json/write-str "ok"))
+  (let [user-id (-user-id req)
+        body (-extract-body req)]
+    (model/new-report user-id body)
+    (json/write-str "ok")))
 
 (defn post-unplanned [req]
-  (-> req
-    -extract-body
-    model/update-report
-    json/write-str))
+  (let [user-id (-user-id req)
+        body (-extract-body req)]
+    (json/write-str
+      (model/update-report user-id body))))
 
 (defn put-task [id req]
   (model/update-task id (get (-extract-body req) "done")))

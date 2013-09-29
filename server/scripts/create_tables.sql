@@ -11,6 +11,7 @@ create table tasks (
 
 create table reports (
     id int primary key auto_increment,
+    user_id int not null,
     create_time datetime,
     finalized boolean default false
 );

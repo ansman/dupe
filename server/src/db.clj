@@ -24,13 +24,13 @@
     (map truncate-table
          (map name tables))))
 
-(defn finalize-previous-report []
-  (j/update! db-spec :reports {:finalized true} ["finalized=false limit 1"]))
+(defn finalize-previous-report [user-id]
+  (j/update! db-spec :reports {:finalized true} ["user_id = ? and finalized=false limit 1" user-id]))
 
-(defn create-new-report []
+(defn create-new-report [user-id]
   (:generated_key
     (first
-      (j/insert! db-spec :reports {:id nil}))))
+      (j/insert! db-spec :reports {:id nil :user_id user-id}))))
 
 (defn insert-one-task [task]
   (:generated_key
@@ -51,8 +51,8 @@
                [{:report_id report-id :task_id task-id :planned planned?}])]
     (map #(apply insert %) rows)))
 
-(defn get-latest-report []
-  (first (j/query db-spec ["select * from reports where finalized = false limit 1"])))
+(defn get-latest-report [user-id]
+  (first (j/query db-spec ["select * from reports where user_id = ? and finalized = false limit 1" user-id])))
 
 (defn get-tasks-for-report [report-id]
   (j/query db-spec ["select * from tasks join tasks_in_reports on tasks.id = task_id where report_id = ?" report-id]))

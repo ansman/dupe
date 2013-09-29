@@ -8,16 +8,16 @@
 (defn clean-task [task]
   (select-keys task [:id :description :done :comments]))
 
-(defn new-report [planned]
-  (db/finalize-previous-report)
-  (let [report-id (db/create-new-report)
+(defn new-report [user-id planned]
+  (db/finalize-previous-report user-id)
+  (let [report-id (db/create-new-report user-id)
         task-ids (db/get-ids-for-tasks planned)]
     (doall
       (db/insert-report-task-mappings report-id task-ids true))
   ))
 
-(defn update-report [unplanned]
-  (let [report-id (:id (db/get-latest-report))
+(defn update-report [user-id unplanned]
+  (let [report-id (:id (db/get-latest-report user-id))
         task-ids (db/get-ids-for-tasks unplanned)]
     (doall
       (db/insert-report-task-mappings report-id task-ids false))
@@ -51,8 +51,8 @@
                           (map -clean-comment
                                (get task-lookup (:id t))))) tasks))))
 
-(defn get-latest-report []
-  (let [latest-report (db/get-latest-report)]
+(defn get-latest-report [user-id]
+  (let [latest-report (db/get-latest-report user-id)]
     (if (nil? latest-report)
       {:planned ()
        :unplanned ()}
