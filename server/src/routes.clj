@@ -21,7 +21,7 @@
   (json/write-str "ok"))
 
 (defn put-task [id req]
-  (model/update-report id (get (-extract-body req) "done")))
+  (model/update-task id (get (-extract-body req) "done")))
 
 (defn post-task-comments [id req]
   (model/add-task-comment id (get (-extract-body req) "comment")))
@@ -46,7 +46,7 @@
   (GET "/api/latest" [] get-latest)
   (POST "/api/planned" [] post-planned)
   (POST "/api/unplanned" [] post-unplanned)
-  (PUT "/api/tasks/:id/" [id] #(put-task (Integer. id) %))
+  (PUT "/api/tasks/:id" [id] #(put-task (Integer. id) %))
   (POST "/api/tasks/:id/comments" [id] #(post-task-comments (Integer. id) %))
   (route/files "/static/")
   (route/not-found "<p>Page not found.</p>"))
