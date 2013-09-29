@@ -54,21 +54,31 @@
                                  "Access-Control-Allow-Origin" "*"
                                  "Access-Control-Allow-Headers" "Content-Type"})))
 
+(defn -get-user-for-request [request]
+  (-> request
+    :query-params
+    (get "access_token")
+    auth/is-valid-access-token))
+
 (defn require-auth [app]
   (fn [request]
-    (if (-> request
-          :query-params
-          (get "access_token")
-          auth/is-valid-access-token
-          nil?)
-      {:status 401
-       :body (json/write-str {"redirect_url" auth-redirect-url})}
-      (app request))
+    (let [user (-get-user-for-request request)]
+      (if (nil? user)
+        {:status 401
+         :body (json/write-str {"redirect_url" auth-redirect-url})}
+        (app (assoc request :user user))))
   ))
+
+(defn get-user [request]
+  (let [res (select-keys
+              (:user request)
+              [:id :login :name :email :avatar_url])]
+    (json/write-str res)))
 
 (defroutes all-routes
   (OPTIONS "*" [] show-options)
   (GET "/api/latest" [] get-latest)
+  (GET "/api/user" [] get-user)
   (POST "/api/planned" [] post-planned)
   (POST "/api/unplanned" [] post-unplanned)
   (PUT "/api/tasks/:id" [id] #(put-task (Integer. id) %))
@@ -80,7 +90,7 @@
 
 (defn app []
   (-> #'all-routes
-    wrap-response
     require-auth
+    wrap-response
     logger/wrap-with-plaintext-logger
     site))
