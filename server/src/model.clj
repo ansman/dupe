@@ -5,6 +5,9 @@
   (println "init model")
   (db/truncate-all))
 
+(defn clean-task [task]
+  (select-keys task [:id :description :done :comments]))
+
 (defn new-report [planned]
   (db/finalize-previous-report)
   (let [report-id (db/create-new-report)
@@ -18,6 +21,7 @@
         task-ids (db/get-ids-for-tasks unplanned)]
     (doall
       (db/insert-report-task-mappings report-id task-ids false))
+    (doall (map clean-task (db/get-tasks task-ids)))
   ))
 
 (defn update-task [id done?]
@@ -25,9 +29,6 @@
 
 (defn add-task-comment [task-id comment]
   (db/add-comment task-id comment))
-
-(defn clean-task [task]
-  (select-keys task [:id :description :done :comments]))
 
 (defn sort-tasks [tasks]
   (let [f #(map clean-task (filter % tasks))]

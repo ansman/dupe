@@ -12,6 +12,9 @@
 
 (def tables '(:comments :reports :tasks :tasks_in_reports))
 
+(defn -make-in-str [ids]
+  (str "(" (clojure.string/join "," ids) ")"))
+
 
 (defn truncate-table [table-name]
   (j/execute! db-spec [(str "truncate table " table-name)] :transaction? false))
@@ -54,14 +57,14 @@
 (defn get-tasks-for-report [report-id]
   (j/query db-spec ["select * from tasks join tasks_in_reports on tasks.id = task_id where report_id = ?" report-id]))
 
+(defn get-tasks [task-ids]
+  (j/query db-spec [(str "select * from tasks where id in " (-make-in-str task-ids))]))
+
 (defn update-task [id done?]
   (j/update! db-spec :tasks {:id done?} ["id=?" id]))
 
 (defn add-comment [task-id comment]
   (j/insert! db-spec :comments {:task_id task-id :comment comment}))
-
-(defn -make-in-str [ids]
-  (str "(" (clojure.string/join "," ids) ")"))
 
 (defn get-comments-for-tasks [task-ids]
   (println task-ids)

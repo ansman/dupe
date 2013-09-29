@@ -17,8 +17,10 @@
   (json/write-str "ok"))
 
 (defn post-unplanned [req]
-  (model/update-report (-extract-body req))
-  (json/write-str "ok"))
+  (-> req
+    -extract-body
+    model/update-report
+    json/write-str))
 
 (defn put-task [id req]
   (model/update-task id (get (-extract-body req) "done")))
