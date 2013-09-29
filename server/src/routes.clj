@@ -1,5 +1,6 @@
 (ns routes
   (:use [ring.util.response :only [redirect]]
+        [ring.util.request :only [path-info]]
         [compojure.handler :only [site]]
         [compojure.core :only [defroutes GET POST PUT DELETE ANY OPTIONS context]])
   (:require [compojure.route :as route]
@@ -65,10 +66,16 @@
     (get "access_token")
     auth/is-valid-access-token))
 
+(def non-authed-routes #{"/api/auth/redirect"
+                         "/api/auth/callback"})
+
+(defn authed-route? [request]
+  (not (contains? non-authed-routes (path-info request))))
+
 (defn require-auth [app]
   (fn [request]
     (let [user (-get-user-for-request request)]
-      (if (nil? user)
+      (if (and (nil? user) (authed-route? request))
         {:status 401
          :body (json/write-str {"redirect_url" auth-redirect-url})}
         (app (assoc request :user user))))
