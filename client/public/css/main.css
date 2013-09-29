@@ -1,0 +1,39 @@
+.checkbox-label {
+  cursor: pointer;
+}
+
+input[type=checkbox] {
+  display: none;
+}
+
+input[type=checkbox] + .text {
+  position: relative;
+  font-size: 20px;
+  padding-left: 30px;
+}
+
+input[type=checkbox] + .text:before {
+  content: "";
+  display: block;
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  margin-top: -9px;
+  border: 1px solid #333;
+}
+
+input[type=checkbox]:checked + .text:before {
+  display: inline-block;
+  font-family: 'Glyphicons Halflings';
+  -webkit-font-smoothing: antialiased;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 16px;
+  line-height: 13px;
+  content: "\e013";
+  color: #468847;
+  position: absolute;
+}
