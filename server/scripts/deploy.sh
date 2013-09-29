@@ -1,16 +1,16 @@
 #!/usr/bin/env sh
 
-function build_client {
+function deploy_client {
   pushd .
   cd ../client
-  lein cljsbuild clean
-  lein cljsbuild once development
+  lein cljsdeploy clean
+  lein cljsdeploy once development
   ssh dupe@192.241.196.82 'rm -rf public'
   scp -r public dupe@192.241.196.82:
   popd
 }
 
-function build_server {
+function deploy_server {
   rm target/*.jar
   lein uberjar
   scp target/server-standalone.jar dupe@192.241.196.82:server.jar
@@ -18,10 +18,10 @@ function build_server {
 }
 
 if [ "$1" = "client" ]; then
-  build_client
+  deploy_client
 elif [ "$1" = "server" ]; then
-  build_server
+  deploy_server
 else
-  build_client
-  build_server
+  deploy_client
+  deploy_server
 fi
