@@ -8,6 +8,8 @@
             [model]
             [auth]))
 
+(def auth-redirect-url "/api/auth/redirect")
+
 (defn -extract-body [req]
   (-> req :body clojure.java.io/reader json/read))
 
@@ -52,6 +54,13 @@
                                  "Access-Control-Allow-Origin" "*"
                                  "Access-Control-Allow-Headers" "Content-Type"})))
 
+(defn require-auth [app]
+  (fn [request]
+    (if (-> request :query-params (get "access_token") nil?)
+      (redirect auth-redirect-url)
+      (app request))
+  ))
+
 (defroutes all-routes
   (OPTIONS "*" [] show-options)
   (GET "/api/latest" [] get-latest)
@@ -66,6 +75,7 @@
 
 (defn app []
   (-> #'all-routes
+    require-auth
     wrap-response
     logger/wrap-with-plaintext-logger
     site))
