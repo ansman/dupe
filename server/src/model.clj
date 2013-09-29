@@ -1,64 +1,54 @@
-(ns model)
-
-(def data (atom []))
-(def counter (atom 0))
+(ns model
+  (:require [db]))
 
 (defn init []
   (println "init model")
-  (reset! data [])
-  (reset! counter 0))
-
-(defn next-id []
-  (swap! counter inc))
-
-(defn new-task [planned?]
-  {:id (next-id)
-   :done false
-   :comments []
-   :planned planned?})
-
-(defn -planned? [task]
-  (:planned task))
-
-(defn -new-task-and-update [planned?]
-  (fn [changes]
-    (merge (new-task planned?) changes)))
-
-(defn -clean-task [task]
-  (dissoc task :planned))
-
-(defn -get-cleaned-tasks [planned?]
-  (let [f (if planned? -planned? (complement -planned?))]
-    (map -clean-task (filter f @data))))
-
-(defn -has-id? [id]
-  (fn [task] (= (:id task) id)))
-
-(defn -get-task [id]
-  (first (filter (-has-id? id) @data)))
-
-(defn -del-task [id]
-  (swap! data (partial remove (-has-id? id))))
-
-(defn -add-task [task]
-  (swap! data #(conj % task)))
+  (db/truncate-all))
 
 (defn new-report [planned]
-  (swap! data (fn [x] (map (-new-task-and-update true) planned))))
+  (db/finalize-previous-report)
+  (let [report-id (db/create-new-report)
+        task-ids (db/get-ids-for-tasks planned)]
+    (db/insert-report-task-mappings report-id task-ids true)
+  ))
 
 (defn update-report [unplanned]
-  (swap! data #(concat % (map (-new-task-and-update false) unplanned))))
+  (let [report-id (:id (db/get-latest-report))
+        task-ids (db/get-ids-for-tasks unplanned)]
+    (db/insert-report-task-mappings report-id task-ids false)
+  ))
 
 (defn update-task [id done?]
-  (let [task (-get-task id)]
-    (-del-task id)
-    (-add-task (assoc task :done done?))))
+  (db/update-task id done?))
 
-(defn add-task-comment [id comment]
-  (let [task (-get-task id)]
-    (-del-task id)
-    (-add-task (update-in task [:comments] conj comment))))
+(defn add-task-comment [task-id comment]
+  (db/add-comment task-id comment))
+
+(defn clean-task [task]
+  (select-keys task [:id :description :done :comments]))
+
+(defn sort-tasks [tasks]
+  (let [f #(map clean-task (filter % tasks))]
+    {:planned (doall (f :planned))
+     :unplanned (doall (f (complement :planned)))}))
+
+(defn -clean-comment [comment]
+  (select-keys comment [:id :comment]))
+
+(defn get-comment-lookup-for-tasks [tasks]
+  (println tasks)
+  (let [task-ids (distinct (map :id tasks))]
+    (group-by :task_id (db/get-comments-for-tasks task-ids))
+  ))
+
+(defn get-and-add-comments-to-tasks [tasks]
+  (let [task-lookup (get-comment-lookup-for-tasks tasks)]
+    (map (fn [t] (assoc t :comments (map -clean-comment (get task-lookup (:id t))))) tasks)))
 
 (defn get-latest-report []
-  {:planned (-get-cleaned-tasks true)
-   :unplanned (-get-cleaned-tasks false)})
+  (let [latest-report (db/get-latest-report)]
+    (doall (-> latest-report
+      :id
+      db/get-tasks-for-report
+      get-and-add-comments-to-tasks
+      sort-tasks))))
