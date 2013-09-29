@@ -42,13 +42,20 @@
   ))
 
 (defn get-and-add-comments-to-tasks [tasks]
-  (let [task-lookup (get-comment-lookup-for-tasks tasks)]
-    (map (fn [t] (assoc t :comments (map -clean-comment (get task-lookup (:id t))))) tasks)))
+  (if (empty? tasks)
+    tasks
+    (let [task-lookup (get-comment-lookup-for-tasks tasks)]
+      (map (fn [t] (assoc t :comments
+                          (map -clean-comment
+                               (get task-lookup (:id t))))) tasks))))
 
 (defn get-latest-report []
   (let [latest-report (db/get-latest-report)]
-    (doall (-> latest-report
-      :id
-      db/get-tasks-for-report
-      get-and-add-comments-to-tasks
-      sort-tasks))))
+    (if (nil? latest-report)
+      {:planned ()
+       :unplanned ()}
+      (doall (-> latest-report
+        :id
+        db/get-tasks-for-report
+        get-and-add-comments-to-tasks
+        sort-tasks)))))
