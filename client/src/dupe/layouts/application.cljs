@@ -16,7 +16,7 @@
       [:ul.nav.navbar-nav.navbar-right
        [:li.dropdown
         [:a.dropdown-toggle {:href "#" :data-toggle "dropdown"}
-         "Logged in a Nicklas"
+         "Logged in as Nicklas"
          [:b.caret] ]
         [:ul.dropdown-menu
          [:li
