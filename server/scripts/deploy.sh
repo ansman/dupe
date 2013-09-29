@@ -1,6 +1,6 @@
 pushd .
 cd ../client
-lein cljsbuild once production
+lein cljsbuild once development
 ssh dupe@192.241.196.82 'rm -rf public'
 scp -r public dupe@192.241.196.82:
 
