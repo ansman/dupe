@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+set -e
+cd `dirname $0`/../
+rm -fr build
+lein cljsbuild clean production
+lein cljsbuild once production
+mkdir -p build/javascript build/css
+
+function hash_file {
+  file="$1"
+  hashsum=`md5 -q "build/$file"`
+  extension="${file##*.}"
+  name="${file%.*}"
+  new_name="$name-$hashsum.$extension"
+  mv "build/$file" "build/$new_name"
+
+  sed "s#$file#$new_name#" "build/index.html" > build/index.html.tmp
+  mv build/index.html.tmp build/index.html
+}
+
+cp -R public/javascript/vendor build/javascript/
+cp -R public/css build/
+cp -R public/index.html build
+
+hash_file "javascript/app.js"
+hash_file "css/main.css"
+
+now=`date +"%s"`
+scp -r build dupe@192.241.196.82:builds/$now
+ssh dupe@192.241.196.82 "rm public; ln -s builds/$now public"

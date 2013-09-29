@@ -1,17 +1,15 @@
-(ns dupe.auth
-  (:require [goog.net.cookies]))
+(ns dupe.auth)
 
 (def access-token-key "dupe:access-token")
 
-(defn ^:export access-token
-  ([] (.get goog.net.cookies access-token-key))
-  ([new-token] (.set goog.net.cookies access-token-key
-                     new-token
-                     (* 60 60 24 7) ; One week validity
-                     "/")))
+(defn ^:export access-token []
+  (.getItem js/localStorage access-token-key))
 
-(defn ^:export refresh-access-token []
-  (when-let [token (access-token)] (access-token token)))
+(defn ^:export set-access-token! [new-token]
+  (.setItem js/localStorage access-token-key new-token))
+
+(defn ^:export refresh-access-token! []
+  (when-let [token (access-token)] (set-access-token! token)))
 
 (defn ^:export authenticated? []
-  (true? (access-token)))
+  (not (empty? (access-token))))

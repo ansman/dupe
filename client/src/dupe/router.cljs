@@ -22,7 +22,7 @@
 
 (defn try-route [entry]
   (when-let [result (.exec (key entry) (.-hash js/location))]
-    ((val entry) (rest result))
+    (apply (val entry) (rest result))
     true))
 
 (defn try-routes []

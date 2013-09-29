@@ -12,9 +12,16 @@
   :cljsbuild {
     :builds {
       :development {
-        :source-paths ["src"]; "test"]
+        :source-paths ["src" "development"]; "test"]
         :notify-command ["growlnotify" "-m"]
         :compiler {
           :pretty-print true
-          :output-to "public/javascript/app.js"}}}
+          :output-to "public/javascript/app.js"}}
+      :production {
+        :source-paths ["src" "production"]; "test"]
+        :notify-command ["growlnotify" "-m"]
+        :compiler {
+          :pretty-print false
+          :optimizations :simple
+          :output-to "build/javascript/app.js"}}}
     :test-commands {"tests" ["phantomjs" :cljs.testrunner "public/javascript/app.js"]}})

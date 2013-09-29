@@ -1,5 +1,6 @@
 (ns dupe.api
   (:require [dupe.config :refer [config]]
+            [dupe.auth :as auth]
             [cljs.core.async :refer [chan close! >!]]
             [goog.json :as json]
             [clojure.walk :refer [keywordize-keys]]
@@ -16,7 +17,10 @@
     (.warn js/console
            (str "The server failed with status " (or status "unknown")))))
 
-(defn build-url [endpoint] (str (:api-url config) endpoint))
+(defn build-url [endpoint] (str (:api-url config)
+                                endpoint
+                                "?access_token="
+                                (auth/access-token)))
 
 (defn ^:export get [endpoint & {:keys [on-error on-success]}]
   (request/request (build-url endpoint)
