@@ -26,23 +26,8 @@
   (when-not (empty? (dommy/value (last (sel root [:.task :input]))))
     (dommy/insert-before! (task-input "") (sel1 root :.form-actions))))
 
-(defn empty-task-input? [form-group]
-  (empty? (dommy/value (sel1 form-group :input))))
-
-(defn task-inputs-to-remove [root]
-  (filter empty-task-input? (nthnext (butlast (sel root :.task)) 3)))
-
-(defn remove-task-input [group]
-  (when (.-parentNode group)
-    (dommy/remove! group)))
-
-(defn remove-task-inputs-if-needed [root]
-  (doall (map remove-task-input (task-inputs-to-remove root))))
-
 (defn update-task-inputs [root ev]
-  (add-task-inputs-if-needed root)
-  (when-not (empty? (remove-task-inputs-if-needed root))
-    (.focus (last (sel root [:.task :input])))))
+  (add-task-inputs-if-needed root))
 
 (defn planned-tasks [root]
   (map (fn [description] {:id nil :description description})
