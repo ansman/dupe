@@ -67,7 +67,6 @@
   (j/insert! db-spec :comments {:task_id task-id :comment comment}))
 
 (defn get-comments-for-tasks [task-ids]
-  (println task-ids)
   (j/query db-spec [(str "select * from comments where task_id in " (-make-in-str task-ids))]))
 
 (def insert-q
