@@ -7,9 +7,12 @@
             [clojure.data.json :as json]
             [ring.middleware.logger :as logger]
             [model]
-            [auth]))
+            [auth]
+            [datasource.core]))
 
 (def auth-redirect-url "/api/auth/redirect")
+
+(def system (atom {:db datasource.core/db-spec}))
 
 (defn -extract-body [req]
   (-> req :body clojure.java.io/reader json/read))
@@ -18,31 +21,33 @@
   (-> req :user :id))
 
 (defn get-latest [req]
-  (-> req -user-id model/get-latest-report json/write-str))
+  (->> req -user-id (model/get-latest-report @system) json/write-str))
 
 (defn post-planned [req]
   (let [user-id (-user-id req)
         body (-extract-body req)]
-    (model/new-report user-id body)
+    (model/new-report @system user-id body)
     (json/write-str "ok")))
 
 (defn post-unplanned [req]
   (let [user-id (-user-id req)
         body (-extract-body req)]
     (json/write-str
-      (model/update-report user-id body))))
+      (model/update-report @system user-id body))))
 
 (defn put-task [id req]
-  (model/update-task id (get (-extract-body req) "done")))
+  (model/update-task @system id (get (-extract-body req) "done")))
 
 (defn post-task-comments [id req]
-  (model/add-task-comment id (get (-extract-body req) "comment")))
+  (model/add-task-comment @system id (get (-extract-body req) "comment")))
 
 (defn redirect-to-auth [req]
-  (-> req :query-params (get "redirect_url") auth/auth-request-url redirect))
+  (let [auth-request-url (partial auth/auth-request-url @system)]
+    (-> req :query-params (get "redirect_url") auth-request-url redirect)))
 
 (defn handle-auth-callback [req encoded-redirect-url]
-  (let [token (-> req :query-params (get "code") auth/callback)]
+  (let [callback (partial auth/callback @system)
+        token (-> req :query-params (get "code") callback)]
     (redirect (format "%s/%s" (auth/decode-b64 encoded-redirect-url) token))))
 
 
@@ -60,19 +65,20 @@
                                  "Access-Control-Allow-Origin" "*"
                                  "Access-Control-Allow-Headers" "Content-Type"})))
 
-(defn -get-user-for-request [request]
-  (-> request
-    :query-params
-    (get "access_token")
-    auth/is-valid-access-token))
+(defn -get-user-for-request [system request]
+  (let [is-valid-access-token (partial auth/is-valid-access-token system)]
+    (-> request
+      :query-params
+      (get "access_token")
+      is-valid-access-token)))
 
-(defn authed-route? [request]
+(defn -authed-route? [request]
   (nil? (re-matches #"^/api/auth.*" (path-info request))))
 
 (defn require-auth [app]
   (fn [request]
-    (let [user (-get-user-for-request request)]
-      (if (and (nil? user) (authed-route? request))
+    (let [user (-get-user-for-request @system request)]
+      (if (and (nil? user) (-authed-route? request))
         {:status 401
          :body (json/write-str {"redirect_url" auth-redirect-url})}
         (app (assoc request :user user))))

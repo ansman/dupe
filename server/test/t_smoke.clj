@@ -3,13 +3,14 @@
   (:require [ring.mock.request :as req]
             [clojure.data.json :as json]
             [routes]
-            [model]))
+            [model]
+            [datasource.users]))
 
 
 (def handler (routes/app))
 
 (defn insert-user [user]
-  (db/insert-or-update-user
+  (datasource.users/insert-or-update-user (:db @routes/system)
     (merge {"id" 17 "access_token" "abcde"} user)))
 
 
@@ -33,7 +34,7 @@
 
 
 (defn setup []
-  (model/init)
+  (model/init @routes/system)
   (insert-user {}))
 
 (with-state-changes

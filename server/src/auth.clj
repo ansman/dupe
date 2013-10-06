@@ -4,11 +4,12 @@
             [clojure.data.json :as json]
             [clojure.string]
             [clojure.data.codec.base64 :as b64]
-            [db]))
+            [datasource.users]))
 
 (def client-id "719f4d75d0d8adb52095")
 (def client-secret "f3ee5554f8e829f888ed599ae5d998acfbd9b4d9")
 (def oauth-url "https://github.com/login/oauth/authorize")
+(def github-fields ["id" "login" "name" "email" "avatar_url"])
 
 
 (defn encode-b64 [string]
@@ -16,6 +17,9 @@
 
 (defn decode-b64 [string]
   (-> string .getBytes b64/decode String.))
+
+(defn uuid []
+  (clojure.string/replace (str (java.util.UUID/randomUUID)) "-" ""))
 
 
 (defn -create-callback-url [redirect-url]
@@ -40,9 +44,6 @@
     (println "Exchange token; github says:" resp)
     (-> resp :body json/read-str (get "access_token"))))
 
-(defn uuid []
-  (clojure.string/replace (str (java.util.UUID/randomUUID)) "-" ""))
-
 
 (defn -fetch-github-user [github-access-token]
   (let [resp @(http/get
@@ -53,23 +54,21 @@
     (-> resp :body json/read-str)))
 
 
-(def github-fields ["id" "login" "name" "email" "avatar_url"])
-
-(defn -fetch-and-store-user [github-access-token]
+(defn -fetch-and-store-user [system github-access-token]
   (let [github-user (-fetch-github-user github-access-token)
         access-token (uuid)]
-    (db/insert-or-update-user
+    (datasource.users/insert-or-update-user (:db system)
       (assoc (select-keys github-user github-fields)
              "github_access_token" github-access-token
              "access_token" access-token))
     access-token))
 
-(defn callback [code]
-  (-> code -exchange-token -fetch-and-store-user))
+(defn callback [system code]
+  (->> code -exchange-token (-fetch-and-store-user system)))
 
-(defn is-valid-access-token [access-token]
+(defn is-valid-access-token [system access-token]
   (let [res
     (and
       access-token
-      (db/get-user-by-access-token access-token))]
+      (datasource.users/get-user-by-access-token (:db system) access-token))]
     res))

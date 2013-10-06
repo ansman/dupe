@@ -1,63 +1,68 @@
 (ns model
-  (:require [db]))
+  (:require [datasource.core]
+            [datasource.users]
+            [datasource.reports]
+            [datasource.tasks]))
 
-(defn init []
-  (println "init model")
-  (db/truncate-all))
+(defn init [system]
+  (datasource.core/reset-all (:db system)))
 
-(defn clean-task [task]
+(defn -clean-task [task]
   (select-keys task [:id :description :done :comments]))
 
-(defn new-report [user-id planned]
-  (db/finalize-previous-report user-id)
-  (let [report-id (db/create-new-report user-id)
-        task-ids (db/get-ids-for-tasks planned)]
+(defn new-report [system user-id planned]
+  (let [db (:db system)]
+    (datasource.reports/finalize-previous-report db user-id)
+    (let [report-id (datasource.reports/create-new-report db user-id)
+          task-ids (datasource.tasks/get-ids-for-tasks db planned)]
+      (doall
+        (datasource.tasks/insert-report-task-mappings db report-id task-ids true))
+    )))
+
+(defn update-report [system user-id unplanned]
+  (let [db (:db system)
+        report-id (:id (datasource.reports/get-latest-report db user-id))
+        task-ids (datasource.tasks/get-ids-for-tasks db unplanned)]
     (doall
-      (db/insert-report-task-mappings report-id task-ids true))
+      (datasource.tasks/insert-report-task-mappings db report-id task-ids false))
+    (doall (map -clean-task (datasource.tasks/get-tasks db task-ids)))
   ))
 
-(defn update-report [user-id unplanned]
-  (let [report-id (:id (db/get-latest-report user-id))
-        task-ids (db/get-ids-for-tasks unplanned)]
-    (doall
-      (db/insert-report-task-mappings report-id task-ids false))
-    (doall (map clean-task (db/get-tasks task-ids)))
-  ))
+(defn update-task [system id done?]
+  (datasource.tasks/update-task (:db system) id done?))
 
-(defn update-task [id done?]
-  (db/update-task id done?))
+(defn add-task-comment [system task-id comment]
+  (datasource.tasks/add-comment (:db system) task-id comment))
 
-(defn add-task-comment [task-id comment]
-  (db/add-comment task-id comment))
-
-(defn sort-tasks [tasks]
-  (let [f #(map clean-task (filter % tasks))]
+(defn -sort-tasks [tasks]
+  (let [f #(map -clean-task (filter % tasks))]
     {:planned (doall (f :planned))
      :unplanned (doall (f (complement :planned)))}))
 
 (defn -clean-comment [comment]
   (select-keys comment [:id :comment]))
 
-(defn get-comment-lookup-for-tasks [tasks]
+(defn get-comment-lookup-for-tasks [system tasks]
   (let [task-ids (distinct (map :id tasks))]
-    (group-by :task_id (db/get-comments-for-tasks task-ids))
+    (group-by :task_id (datasource.tasks/get-comments-for-tasks (:db system) task-ids))
   ))
 
-(defn get-and-add-comments-to-tasks [tasks]
+(defn get-and-add-comments-to-tasks [system tasks]
   (if (empty? tasks)
     tasks
-    (let [task-lookup (get-comment-lookup-for-tasks tasks)]
+    (let [task-lookup (get-comment-lookup-for-tasks system tasks)]
       (map (fn [t] (assoc t :comments
                           (map -clean-comment
                                (get task-lookup (:id t))))) tasks))))
 
-(defn get-latest-report [user-id]
-  (let [latest-report (db/get-latest-report user-id)]
+(defn get-latest-report [system user-id]
+  (let [db (:db system)
+        latest-report (datasource.reports/get-latest-report db user-id)]
     (if (nil? latest-report)
       {:planned ()
        :unplanned ()}
-      (doall (-> latest-report
+      (doall (->> latest-report
         :id
-        db/get-tasks-for-report
-        get-and-add-comments-to-tasks
-        sort-tasks)))))
+        (datasource.tasks/get-tasks-for-report db)
+        (get-and-add-comments-to-tasks system)
+        -sort-tasks)))))
